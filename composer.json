@@ -1,5 +1,5 @@
 {
-    "name": "cron/cron-bundle",
+    "name": "amadeus-m/cron-bundle",
     "type": "symfony-bundle",
     "description": "Symfony cron",
     "license": "MIT",

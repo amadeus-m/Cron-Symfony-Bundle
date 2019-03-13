@@ -14,7 +14,8 @@
         "symfony/framework-bundle": "^3.4|^4.0",
         "cron/cron": "^1.0.1",
         "doctrine/doctrine-bundle": "~1.4",
-        "doctrine/orm": "~2.4,>=2.4.5"
+        "doctrine/orm": "~2.4,>=2.4.5",
+        "react/event-loop": "^1.1"
     },
     "autoload": {
         "psr-4" : {

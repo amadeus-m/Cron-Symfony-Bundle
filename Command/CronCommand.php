@@ -12,7 +12,7 @@ namespace Cron\CronBundle\Command;
 
 use Cron\CronBundle\Cron\CommandBuilder;
 use React\EventLoop\Factory;
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Process;
@@ -21,12 +21,25 @@ use Symfony\Component\Process\Process;
 /**
  * @author Timofey Mikhaylov <amadeus_m@mail.ru>
  */
-class CronCommand extends ContainerAwareCommand
+class CronCommand extends Command
 {
     /**
      * @var \SplObjectStorage
      */
     private $processes;
+    /**
+     * @var CommandBuilder
+     */
+    private $commandBuilder;
+
+    /**
+     * CronCommand constructor.
+     */
+    public function __construct(CommandBuilder $builder)
+    {
+        $this->commandBuilder = $builder;
+        parent::__construct(null);
+    }
 
     /**
      * {@inheritdoc}
@@ -43,15 +56,13 @@ class CronCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var CommandBuilder $builder */
-        $builder = $this->getContainer()->get('cron.command_builder');
-        $command = $builder->build('cron:run');
+        $command = $this->commandBuilder->build('cron:run');
         $this->processes = new \SplObjectStorage();
         $loop = Factory::create();
         $loop->addPeriodicTimer(60.0,
             function () use ($command) {
                 $process = new Process($command);
-                $this->processes->attach($process, new \DateTime());
+                $this->processes->attach($process, date('Y-m-d H:i:s'));
                 $process->start();
             }
         );
@@ -60,12 +71,19 @@ class CronCommand extends ContainerAwareCommand
                 /** @var Process $process */
                 foreach ($this->processes as $process) {
                     if (!$process->isRunning()) {
-                        $output->writeln($process->getOutput());
+                        $output->write(
+                            sprintf('Start: %s Stop: %s Output: %s',
+                                $this->processes->offsetGet($process),
+                                date('Y-m-d H:i:s'),
+                                $process->getOutput()
+                            )
+                        );
                         $this->processes->detach($process);
                     }
                 }
             }
         );
+
         $loop->run();
     }
 }
